@@ -31,10 +31,14 @@ def search_similar_products(request):
         temp_image_path = os.path.join(settings.MEDIA_ROOT, 'temp_image.jpg')
         
         # Save the uploaded image
-        with open(temp_image_path, 'wb+') as destination:
-            for chunk in uploaded_image.chunks():
-                destination.write(chunk)
-
+        try:
+            with open(temp_image_path, 'wb+') as destination:
+                for chunk in uploaded_image.chunks():
+                    destination.write(chunk)
+        except IOError as e:
+            return render(request, 'image_search/search.html', {'error': f'File save error: {e}'})
+        
+        # Proceed if file saved successfully
         try:
             # Extract features from the uploaded image
             uploaded_image_features = extract_features(temp_image_path)
