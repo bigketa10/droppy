@@ -26,6 +26,7 @@ def extract_features(img_path):
     return normalized_features
 
 def search_similar_products(request):
+    temp_image_path = None
     if request.method == 'POST' and request.FILES.get('image'):
         uploaded_image = request.FILES['image']
         temp_image_path = os.path.join(settings.MEDIA_ROOT, 'temp_image.jpg')
@@ -60,7 +61,10 @@ def search_similar_products(request):
             return render(request, 'image_search/results.html', {'products': similar_products})
         finally:
             # Clean up temporary file
-            if os.path.exists(temp_image_path):
+            if temp_image_path and os.path.exists(temp_image_path):
                 os.remove(temp_image_path)
+                print(f"Temporary file path: {temp_image_path}")
+                print(f"File exists: {os.path.exists(temp_image_path)}")
+
     
     return render(request, 'image_search/search.html')
