@@ -10,6 +10,46 @@ from tensorflow.keras.preprocessing import image
 
 # Load the pre-trained model
 model = VGG16(weights='imagenet', include_top=False)
+def search_view(request):
+    if request.method == 'POST':
+        # Handle image upload
+        uploaded_image = request.FILES['image']
+        temp_image_path = os.path.join(settings.MEDIA_ROOT, 'temp_image.jpg')
+
+        # Save the uploaded image to media directory
+        with open(temp_image_path, 'wb+') as destination:
+            for chunk in uploaded_image.chunks():
+                destination.write(chunk)
+
+        print(f"Uploaded image saved at: {temp_image_path}")
+        
+        try:
+            uploaded_image_features = extract_features(temp_image_path)
+            print(f"Extracted features: {uploaded_image_features}")  # Debugging output
+        except Exception as e:
+            print(f"Error during feature extraction: {e}")
+            return render(request, 'image_search/search.html', {'error': 'Feature extraction failed.'})
+        
+        products = Product.objects.all()
+        for product in products:
+            print(f"Product: {product.name}, Feature Vector: {product.feature_vector}")  # Debugging output
+        # Calculate similarity
+        
+        similarities = []
+        for product in products:
+            stored_features = np.array(product.feature_vector)
+            similarity = cosine_similarity([uploaded_image_features], [stored_features])[0][0]
+            print(f"Similarity with {product.name}: {similarity}")  # Debugging output
+            similarities.append((product, similarity))
+
+        # Filter based on similarity threshold
+        threshold = 0.5  # Adjust for testing
+        similar_products = [product for product, sim in similarities if sim > threshold]
+
+        if not similar_products:
+            print("No similar products found.")  # Debugging output
+            return render(request, 'image_search/search.html', {'message': 'No similar products found'})
+
 
 def extract_features(img_path):
     if not os.path.exists(img_path):
