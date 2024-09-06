@@ -8,5 +8,5 @@ urlpatterns = [
     path('image_search/', include('image_search.urls')),
 ]
 
-if settings.DEBUG:  # Only serve media files in development
+if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
